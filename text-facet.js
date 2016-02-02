@@ -59,7 +59,6 @@ define(function() {
     }
 
     function addFacetListingContainer() {
-      // $facetListingContainer = $('<div class="facet-container"></div>');
       $facetListingContainer = $('<div class="facet-container"></div>');
       $domNode.append($facetListingContainer);
     }
@@ -114,7 +113,6 @@ define(function() {
     // Initialize
 
     function init() {
-      // addClearButton();
       addFacetListingContainer();
       update();    
     }
