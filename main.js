@@ -18,11 +18,19 @@ then you can build a dimension from d.fruit -- the value of data-dimension would
 
 */
 
-requirejs(['jquery-2.1.4.min', 'crossfilter.min', 'data/gre-data.js'],
+requirejs(['jquery-2.1.4.min', 'crossfilter.min'],
           
-  function (_, __, data) {
+  function (_, __) {
 
     var facetDomNodes = $('.facet[data-facet-type]');
+  
+    // Get the URL of the data file
+    //  (currently just gets the first occurrance of a data-source attribute on a <script> tag)
+    // TODO: needs to have default value if none found
+  
+    function getDataUrl() {
+      return $('script[data-source]')[0].getAttribute('data-source');
+    }
   
     // Put any data prep work in here -- should return an array of objects
   
@@ -83,14 +91,14 @@ requirejs(['jquery-2.1.4.min', 'crossfilter.min', 'data/gre-data.js'],
     // Call appropriate facet-generators
     // Change dimension into dimensions (an array) to allow for multiple dimensions
     //  This will involve adjusting all the *-facet.js files
-
+  
     function makeFacet(facetType, facetFactory, domNode, dimensions, updateAll) {
-      
+
       if (facetFactory[facetType] === undefined) {
         console.warn('WARNING: Unknown facet type ' + facetType);
         return null;
       } else {
-        // return 1; // TEMP
+        console.log("LOADING: Facet type " + facetType);
         return facetFactory[facetType](domNode, dimensions, updateAll);
       }
     }
@@ -129,7 +137,7 @@ requirejs(['jquery-2.1.4.min', 'crossfilter.min', 'data/gre-data.js'],
         document.getElementsByTagName('head')[0].appendChild(link);
     }
   
-    // Main routine
+    // Main routine -- called when DOM loaded
   
     function init() {
       
@@ -137,7 +145,7 @@ requirejs(['jquery-2.1.4.min', 'crossfilter.min', 'data/gre-data.js'],
 
       // Clean data
       
-      resources = cleanData(data);
+      // resources = cleanData(data);
       
       // Get list of facet resources (.js and .css)
 
@@ -155,20 +163,24 @@ requirejs(['jquery-2.1.4.min', 'crossfilter.min', 'data/gre-data.js'],
         $(i).addClass(i.getAttribute('data-facet-type') + '-facet');
       });
       
+      // Compile list of modules to load: *-facet.js and the source data
       
-      /*.addClass(function (_, i) { console.log('MMM' + i); return i.getAttribute('data-facet-type') });*/
+      var loadThese = [getDataUrl()];
+      facetFilenameRoots.forEach(function (r) { loadThese.push(r); });
       
-      // Load facet js files (*-facet.js)
+      // Load additional modules
       
-      requirejs(facetFilenameRoots, function () {
+      requirejs(loadThese, function () {
 
         var facetFactory = {}, // Hash of facet factory functions
             facets = []; // Facet objects
         
+        resources = cleanData(arguments[0]);
+
         // Assign facet factory functions to facetFactory hash
         
-        for(var i = 0; i < arguments.length; i++) {
-          facetFactory[facetNames[i]] = arguments[i];
+        for(var i = 1; i < arguments.length; i++) {
+          facetFactory[facetNames[i - 1]] = arguments[i];
         }
 
         // This is called by the facets when there's a change
